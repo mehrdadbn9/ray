@@ -220,29 +220,31 @@ class TestPlatformDetection(unittest.TestCase):
 
     def test_darwin_arm64(self):
         with mock.patch(
-            "build_image.platform.system", return_value="Darwin"
-        ), mock.patch("build_image.platform.machine", return_value="arm64"):
+            "ci.build.build_common._platform.system", return_value="Darwin"
+        ), mock.patch("ci.build.build_common._platform.machine", return_value="arm64"):
             arch = ImageBuildConfig._detect_host_arch()
         self.assertEqual(arch, "aarch64")
 
     def test_linux_x86_64(self):
         with mock.patch(
-            "build_image.platform.system", return_value="Linux"
-        ), mock.patch("build_image.platform.machine", return_value="x86_64"):
+            "ci.build.build_common._platform.system", return_value="Linux"
+        ), mock.patch("ci.build.build_common._platform.machine", return_value="x86_64"):
             arch = ImageBuildConfig._detect_host_arch()
         self.assertEqual(arch, "x86_64")
 
     def test_linux_aarch64(self):
         with mock.patch(
-            "build_image.platform.system", return_value="Linux"
-        ), mock.patch("build_image.platform.machine", return_value="aarch64"):
+            "ci.build.build_common._platform.system", return_value="Linux"
+        ), mock.patch(
+            "ci.build.build_common._platform.machine", return_value="aarch64"
+        ):
             arch = ImageBuildConfig._detect_host_arch()
         self.assertEqual(arch, "aarch64")
 
     def test_unsupported_platform_raises(self):
         with mock.patch(
-            "build_image.platform.system", return_value="Windows"
-        ), mock.patch("build_image.platform.machine", return_value="AMD64"):
+            "ci.build.build_common._platform.system", return_value="Windows"
+        ), mock.patch("ci.build.build_common._platform.machine", return_value="AMD64"):
             with self.assertRaises(BuildError):
                 ImageBuildConfig._detect_host_arch()
 
@@ -255,9 +257,9 @@ class TestFromArgs(unittest.TestCase):
             ray_root = _make_ray_root(tmpdir)
 
             with mock.patch(
-                "build_image.platform.system", return_value="Linux"
+                "ci.build.build_common._platform.system", return_value="Linux"
             ), mock.patch(
-                "build_image.platform.machine", return_value="x86_64"
+                "ci.build.build_common._platform.machine", return_value="x86_64"
             ), mock.patch(
                 "build_image.find_ray_root", return_value=ray_root
             ), mock.patch(
@@ -283,9 +285,9 @@ class TestFromArgs(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             ray_root = _make_ray_root(tmpdir)
             with mock.patch(
-                "build_image.platform.system", return_value="Linux"
+                "ci.build.build_common._platform.system", return_value="Linux"
             ), mock.patch(
-                "build_image.platform.machine", return_value="aarch64"
+                "ci.build.build_common._platform.machine", return_value="aarch64"
             ), mock.patch(
                 "build_image.find_ray_root", return_value=ray_root
             ):

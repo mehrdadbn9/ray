@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import platform
 import shutil
 import subprocess
 import sys
@@ -19,11 +18,13 @@ from pathlib import Path
 
 from ci.build.build_common import (
     BuildError,
+    detect_host_arch,
     find_ray_root,
     get_git_commit,
     log,
     parse_file,
 )
+from ci.ray_ci.configs import DEFAULT_ARCHITECTURE
 from ci.ray_ci.docker_container import RayType
 from ci.ray_ci.ray_image import IMAGE_TYPE_CONFIG, RayImage, RayImageError
 
@@ -92,6 +93,7 @@ class ImageBuildConfig:
         if (
             self.ray_image.python_version != cfg["default_python"]
             or self.ray_image.platform != cfg["default_platform"]
+            or self.ray_image.architecture != DEFAULT_ARCHITECTURE
         ):
             return None
         return f"{REGISTRY_PREFIX}{self.ray_image.repo}:nightly{self.ray_image.variation_suffix}"
@@ -140,19 +142,7 @@ class ImageBuildConfig:
 
     @staticmethod
     def _detect_host_arch() -> str:
-        sys_os = platform.system().lower()
-        m = platform.machine().lower()
-        arch = (
-            "x86_64"
-            if m in ("amd64", "x86_64")
-            else "aarch64"
-            if m in ("arm64", "aarch64")
-            else m
-        )
-        supported = {("darwin", "aarch64"), ("linux", "x86_64"), ("linux", "aarch64")}
-        if (sys_os, arch) not in supported:
-            raise BuildError(f"Unsupported platform: {sys_os}-{m}")
-        return arch
+        return detect_host_arch()
 
 
 class ImageBuilder:
@@ -334,6 +324,9 @@ def _build_examples() -> str:
         examples.append(
             (f"ray -p {alt_py} --platform {alt_plat}", f"ray {alt_plat} py{alt_py}"),
         )
+
+    if not examples:
+        return ""
 
     cmd_prefix = "  ./build-image.sh "
     cmds = [cmd_prefix + args for args, _ in examples]
